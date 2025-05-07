@@ -25,8 +25,8 @@ def calculate_sigma(length, mass):
         面密度 (kg/m^2)
     """
     # TODO: 实现面密度计算公式
-    pass
-
+    return mass / (length ** 2)
+    
 def integrand(x, y, z):
     """
     被积函数，计算引力积分核
@@ -39,7 +39,7 @@ def integrand(x, y, z):
         积分核函数值
     """
     # TODO: 实现积分核函数
-    pass
+    return 1 / ((x ** 2 + y ** 2 + z ** 2) ** (3 / 2))
 
 def gauss_legendre_integral(length, z, n_points=100):
     """
@@ -59,7 +59,17 @@ def gauss_legendre_integral(length, z, n_points=100):
         3. 实现双重循环计算二重积分
     """
     # TODO: 实现高斯-勒让德积分
-    pass
+    xi, wi = np.polynomial.legendre.leggauss(n_points)
+    yi, wy = np.polynomial.legendre.leggauss(n_points)
+    xi = xi * (length / 2)
+    yi = yi * (length / 2)
+    wi = wi * (length / 2)
+    wy = wy * (length / 2)
+    integral_value = 0
+    for i in range(n_points):
+        for j in range(n_points):
+            integral_value += wi[i] * wy[j] * integrand(xi[i], yi[j], z)
+    return integral_value
 
 def calculate_force(length, mass, z, method='gauss'):
     """
@@ -77,7 +87,15 @@ def calculate_force(length, mass, z, method='gauss'):
     # TODO: 调用面密度计算函数
     # TODO: 根据method选择积分方法
     # TODO: 返回最终引力值
-    pass
+    sigma = calculate_sigma(length, mass)
+    if method == 'gauss':
+        integral_result = gauss_legendre_integral(length, z)
+    elif method =='scipy':
+        def integrand_wrapper(x, y):
+            return integrand(x, y, z)
+        integral_result, _ = dblquad(integrand_wrapper, -length / 2, length / 2,
+                                     lambda x: -length / 2, lambda x: length / 2)
+    return G * sigma * z * integral_result
 
 def plot_force_vs_height(length, mass, z_min=0.1, z_max=10, n_points=100):
     """
@@ -95,7 +113,22 @@ def plot_force_vs_height(length, mass, z_min=0.1, z_max=10, n_points=100):
     # TODO: 绘制曲线图
     # TODO: 添加理论极限线
     # TODO: 设置图表标题和标签
-    pass
+    z_values = np.linspace(z_min, z_max, n_points)
+    force_gauss = [calculate_force(length, mass, z, method='gauss') for z in z_values]
+    force_scipy = [calculate_force(length, mass, z, method='scipy') for z in z_values]
+    sigma = calculate_sigma(length, mass)
+    Fz_limit = 2 * np.pi * G * sigma * 1  # m_particle = 1 kg
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(z_values, force_gauss, label='Gauss-Legendre Integral', linestyle='-')
+    plt.plot(z_values, force_scipy, label='SciPy dblquad', linestyle='--')
+    plt.axhline(y=Fz_limit, color='r', label=r'$F_{z,limit} = 2\pi G\sigma m_{particle}$', linestyle='-.')
+    plt.xlabel('Height z (m)')
+    plt.ylabel(r'$F_z$ (N)')
+    plt.title(r'$F_z$ vs z for Uniform Square Plate')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 # 示例使用
 if __name__ == '__main__':
