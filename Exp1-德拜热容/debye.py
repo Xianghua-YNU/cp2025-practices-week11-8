@@ -131,7 +131,7 @@ def main():
         print(f"{T:8.1f}\t{result:10.3e}")
     
     # 绘制热容曲线
-    plot_cv()
+    plot_cv()    #绘制曲线
 
 if __name__ == '__main__':
     main()
