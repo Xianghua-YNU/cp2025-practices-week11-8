@@ -118,4 +118,3 @@ if __name__ == '__main__':
     
     # 比较积分方法
     compare_integration_methods(length, mass, test_z)
-    # 11111
